@@ -540,8 +540,6 @@ text_display_close()
     wstandout(corewin);
     mvwaddstr(corewin, 0, 0, pressAnyKey);
     wrefresh(corewin);
-    if (!inputRedirection)
-      getch();
   }
   wstandend(corewin);
   switch_page(DEF_PAGE);
