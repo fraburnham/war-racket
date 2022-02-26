@@ -30,7 +30,7 @@ OBJ1 = pmars.o asm.o eval.o disasm.o cdb.o sim.o pos.o
 OBJ2 = clparse.o global.o token.o 
 OBJ3 = str_eng.o
 
-ALL: flags $(MAINFILE) man doc
+ALL: flags $(MAINFILE)
 
 flags:
 	@echo Making $(MAINFILE) with compiler flags $(CFLAGS)
@@ -57,31 +57,6 @@ $(OBJ1) $(OBJ2) $(OBJ3): makefile config.h global.h
 	@echo Compiling $*.o 
 	@$(CC) $(CFLAGS) -c $*.c
 
-man: pmars.man
-doc: pmars.doc
-pmars.doc: pmars.man
-pmars.man: pmars.6
-
-.6.man:
-	@echo Building $*.man - online manual
-	@nroff -e -man $*.6 > $*.man
-
-.man.doc:
-	@echo Building $*.doc - printable manual
-	@cp $*.man $*.doc
-	@ex $*.doc < makedoc.ex > /dev/null
-
-zip:
-	@echo Building zip archive
-	@zip -@ $(ARCHIVE) < filelist
-	@echo done
-
-tar:
-	@echo Building tar archive
-	@tar cf $(ARCHIVE).tar -I filelist
-	@compress $(ARCHIVE).tar
-	@echo done
- 
 clean:
 	rm -f $(OBJ1) $(OBJ2) $(OBJ3) core
 
