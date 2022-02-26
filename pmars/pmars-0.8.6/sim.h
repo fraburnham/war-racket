@@ -84,7 +84,7 @@ extern int displayMode;
 #define FAR
 #endif
 
-extern int round;
+extern int roundNum;
 extern long cycle;
 extern ADDR_T progCnt;                /* program counter */
 extern warrior_struct *W;        /* indicate which warrior is running */

@@ -150,7 +150,7 @@ cur_display_cycle()
       wstandend(corewin);
       if (!--refreshCounter) {
         refreshCounter = refreshInterval;
-        update_statusline(round);
+        update_statusline(roundNum);
         wrefresh(corewin);
       }
     }
@@ -272,8 +272,8 @@ cur_display_init()
 }
 
 void
-update_statusline(round)
-  int     round;
+update_statusline(roundNum)
+  int     roundNum;
 {
   switch (warriors) {
   case 1:
@@ -281,12 +281,12 @@ update_statusline(round)
     break;
   case 2:
     sprintf(statusLine, preStatusLine, warrior[0].tasks, warrior[1].tasks,
-            cycle >> 1, round, warrior[0].score[0], warrior[0].score[2],
+            cycle >> 1, roundNum, warrior[0].score[0], warrior[0].score[2],
             warrior[0].score[1]);
     break;
   default:
     sprintf(statusLine, preStatusLine, warriorsLeft, cycle / warriorsLeft,
-            round);
+            roundNum);
   }
   mvwaddstr(corewin2, 0, 0, statusLine);
   wrefresh(corewin2);
@@ -536,7 +536,7 @@ void
 text_display_close()
 {
   if (displayLevel) {
-    update_statusline(round - 1);
+    update_statusline(roundNum - 1);
     wstandout(corewin);
     mvwaddstr(corewin, 0, 0, pressAnyKey);
     wrefresh(corewin);

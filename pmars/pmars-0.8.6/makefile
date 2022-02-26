@@ -17,7 +17,7 @@ CC = cc				# if you don't have gcc
 
 CFLAGS = -O -DEXT94 -DCURSESGRAPHX
 LFLAGS = -x
-LIB = -lcurses -ltermlib		# enable this one for curses display
+LIB = -lcurses #-ltermlib		# enable this one for curses display
 # LIB = -lvgagl -lvga			# enable this one for Linux/SVGA
 # LIB = -lX11				# enable this one for X11
 
