@@ -4,8 +4,11 @@
 ;; https://corewar.co.uk/standards/icws88.txt
 
 (provide render-warrior
-         Operand-Modifier-options
+         Opcode
          Opcode-options
+         Operand-Modifier
+         Operand-Modifier-options
+         Warrior
          (struct-out operand)
          (struct-out instruction))
 
@@ -19,11 +22,26 @@
                           (: list-name (Listof name))
                           (define list-name list-contents)))]))
 
+#|
+Warning:
+        Missing ';assert'. Warrior may not work with the current setting
+Error in line 4: 'MOV #5798, #2406'
+        Invalid '88 format. Proper format: 'MOV [#$@<] [$@<]'
+Error in line 5: 'SUB #646, #3777'
+        Invalid '88 format. Proper format: 'SUB [#$@<] [$@<]'
+Error in line 6: 'DJN #4627, #3149'
+        Invalid '88 format. Proper format: 'DJN [$@<] [#$@<]'
+
+clearly the modifiers can't be used all willy nilly in the '88 spec
+(but that warrior did work for the '94 spec. I wonder if it will be easier to embiggen or restrict...
+ I also wonder if I can use types? I'm guessing not since it's a runtime thing... Maybe if I get creative)
+|#
+
 (define-union Operand-Modifier ('immediate 'direct 'b-indirect 'b-indirect-predecrement))
 (define-union Opcode ('dat 'mov 'add 'sub 'jmp 'jmz 'jmn 'cmp 'slt 'djn 'spl))
 
 ;; need to determine the actual range of values for value & set up a better type refinement for it
-(struct operand ((modifier : Operand-Modifier) (value : (U Positive-Index Zero))))
+(struct operand ((modifier : Operand-Modifier) (value : (U Exact-Positive-Integer Zero))))
 (struct instruction ((opcode : Opcode) (a-field : operand) (b-field : operand)))
 
 (define-type Warrior (Listof instruction))
