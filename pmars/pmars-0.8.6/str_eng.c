@@ -161,6 +161,7 @@ char   *unknownMacro = "Unknown macro \"%s\"\n";
 #endif                                /* !SERVER */
 
 char   *nameByAuthorScores = "%s by %s scores %d\n";
+char   *nameScoresParsable = "%s: %d\n";
 char   *resultsAre = "  Results:";
 char   *resultsWLT = "Results: %d %d %d\n";
 

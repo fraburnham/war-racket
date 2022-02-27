@@ -2431,6 +2431,7 @@ sort_by_score(idxV, scrV)
 }
 
 extern char *nameByAuthorScores;
+extern char *nameScoresParsable;
 extern char *resultsAre;
 extern char *resultsWLT;
 
@@ -2551,19 +2552,8 @@ results(outp)
     }
   } else {
     for (i = 0; i < warriors; ++i) {
-      fprintf(outp, nameByAuthorScores, warrior[idxV[i]].name, warrior[idxV[i]].authorName,
+      fprintf(outp, nameScoresParsable, warrior[idxV[i]].name,
               scrV[idxV[i]]);
-      if (warriors > 2) {
-        fprintf(outp, resultsAre);
-        for (j = 0; j < warriors; ++j) {
-          fprintf(outp, " %d", warrior[idxV[i]].score[j]);
-        }
-        fprintf(outp, " %d\n", deaths(idxV[i]));
-      }
-    }
-    if (warriors == 2) {
-      fprintf(outp, resultsWLT, warrior[idxV[0]].score[0],
-              warrior[idxV[0]].score[2], warrior[idxV[0]].score[1]);
     }
   }
 #else
