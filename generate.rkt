@@ -1,9 +1,5 @@
 #lang typed/racket
 
-;; start with random generation of warrirors in here YAY
-;; then work on a fitness func - How to parse the output from pmars?
-;; then breeding
-
 (require typed/racket/random
          (prefix-in redcode: "redcode.rkt"))
 
@@ -20,4 +16,24 @@
 (define (warrior max-instruction-count)
   (map instruction (random-sample redcode:Opcode-options (random (add1 max-instruction-count)))))
 
-;; now some tools to render out to a file
+;; may need to return some error type if the save fails?
+;; oh no that's right this will throw ick
+;; so I should wrap the error and return a Bool
+(: save-warrior (-> redcode:Warrior String Void))
+(define (save-warrior warrior id)
+  (with-output-to-file (string-append id ".red")
+    (lambda ()
+      ;; this should output more metadata eventually
+      (displayln (string-append ";name " id))
+      (displayln (redcode:render-warrior warrior)))))
+
+(: warriors (-> Exact-Positive-Integer Exact-Positive-Integer (Listof redcode:Warrior)))
+(define (warriors number-of-warriors max-instruction-count)
+  (letrec ((rec : (-> Integer (Listof redcode:Warrior) (Listof redcode:Warrior))
+                (lambda (c warriors)
+                  (if (> c 0)
+                      (rec (sub1 c)
+                           (cons (warrior max-instruction-count) warriors))
+                      warriors))))
+    (rec number-of-warriors '())))
+
