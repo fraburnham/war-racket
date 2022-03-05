@@ -18,7 +18,7 @@
         (begin
           (control 'wait)
           (let* ((exit-code (control 'exit-code))
-                 (exit-code : Exit-Code (if (exact-number? exit-code) exit-code #f)))
+                 (exit-code : Exit-Code (and (exact-number? exit-code) exit-code)))
             (run-result (get-output-string out)
                         exit-code
                         (not (and (exact-number? exit-code)
@@ -31,7 +31,7 @@
   (let* ((split : (Listof String) (string-split score-line ": "))
          (name : String (first split))
          (points (string->number (second split)))
-         (points : Points (if (exact-number? points) points #f)))
+         (points : Points (and (exact-number? points) points)))
     (score warrior-file name points)))
 
 (: parse-result (-> (Listof String) run-result (Listof score)))
