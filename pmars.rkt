@@ -1,7 +1,10 @@
 #lang typed/racket
 
-(struct run-result ((output : String) (exit-code : Exact-Number) (error? : Boolean) (error-output : String)))
-(struct score ((warrior-file : String) (warrior-name : String) (score : Exact-Number)))
+(define-type Points (Option Exact-Number))
+(define-type Exit-Code (Option Exact-Number))
+
+(struct run-result ((output : String) (exit-code : Exit-Code) (error? : Boolean) (error-output : String)))
+(struct score ((warrior-file : String) (warrior-name : String) (points : Points)))
 
 (define-predicate exact-number? Exact-Number)
 
@@ -15,19 +18,20 @@
         (begin
           (control 'wait)
           (let* ((exit-code (control 'exit-code))
-                 (exit-code : Exact-Number (if (number? exit-code) exit-code -1)))
+                 (exit-code : Exit-Code (if (exact-number? exit-code) exit-code #f)))
             (run-result (get-output-string out)
                         exit-code
-                        (not (= 0 exit-code))
+                        (not (and (exact-number? exit-code)
+                                  (= 0 exit-code)))
                         (get-output-string err))))
-        (run-result "" -1 #t "Failed to run process"))))
+        (run-result "" #f #t "Failed to run process"))))
 
 (: parse-score (-> String String score))
 (define (parse-score warrior-file score-line)
   (let* ((split : (Listof String) (string-split score-line ": "))
          (name : String (first split))
          (points (string->number (second split)))
-         (points : Exact-Number (if (exact-number? points) points -1)))
+         (points : Points (if (exact-number? points) points #f)))
     (score warrior-file name points)))
 
 (: parse-result (-> (Listof String) run-result (Listof score)))
