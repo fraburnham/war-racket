@@ -1,5 +1,10 @@
 #lang typed/racket
 
+(provide Points
+         parse-result
+         run
+         (struct-out score))
+
 (define-type Points (Option Exact-Number))
 (define-type Exit-Code (Option Exact-Number))
 
@@ -26,15 +31,13 @@
                         (get-output-string err))))
         (run-result "" #f #t "Failed to run process"))))
 
-(: parse-score (-> String String score))
-(define (parse-score warrior-file score-line)
+(: parse-score (-> String Points))
+(define (parse-score score-line)
   (let* ((split : (Listof String) (string-split score-line ": "))
-         (name : String (first split))
-         (points (string->number (second split)))
-         (points : Points (and (exact-number? points) points)))
-    (score warrior-file name points)))
+         (points (string->number (second split))))
+    (and (exact-number? points) points)))
 
-(: parse-result (-> (Listof String) run-result (Listof score)))
-(define (parse-result warrior-files result)
+(: parse-result (-> run-result (Listof Points)))
+(define (parse-result result)
   (let ((trimmed (second (string-split (run-result-output result) "\r\r"))))
-    (map parse-score warrior-files (string-split trimmed "\n"))))
+    (map parse-score (string-split trimmed "\n"))))

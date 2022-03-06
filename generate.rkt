@@ -3,6 +3,9 @@
 (require typed/racket/random
          (prefix-in redcode: "redcode.rkt"))
 
+(provide save-warrior
+         warriors)
+
 (: instruction (-> redcode:Opcode redcode:instruction))
 (define (instruction op)
   (let ((core-size : Exact-Positive-Integer 8000))
@@ -19,13 +22,15 @@
 ;; may need to return some error type if the save fails?
 ;; oh no that's right this will throw ick
 ;; so I should wrap the error and return a Bool
-(: save-warrior (-> redcode:Warrior String Void))
+(: save-warrior (-> redcode:Warrior String String))
 (define (save-warrior warrior id)
-  (with-output-to-file (string-append id ".red")
-    (lambda ()
-      ;; this should output more metadata eventually
-      (displayln (string-append ";name " id))
-      (displayln (redcode:render-warrior warrior)))))
+  (let ((filename : String (string-append id ".red")))
+    (with-output-to-file filename
+      (lambda ()
+        ;; this should output more metadata eventually
+        (displayln (string-append ";name " id))
+        (displayln (redcode:render-warrior warrior))))
+    filename))
 
 (: warriors (-> Exact-Positive-Integer Exact-Positive-Integer (Listof redcode:Warrior)))
 (define (warriors number-of-warriors max-instruction-count)
