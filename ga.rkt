@@ -1,8 +1,12 @@
 #lang typed/racket
 
-(require (prefix-in gen: "generate.rkt")
+(require typed/racket/random
+         (prefix-in gen: "generate.rkt")
          (prefix-in red: "redcode.rkt")
          (prefix-in pmars: "pmars.rkt"))
+
+(define-type Tribe (Listof red:Warrior))
+(define-type World (Listof Tribe))
 
 (struct citizen ((warrior : red:Warrior)
                  (name : String)
@@ -15,8 +19,8 @@
 (: tribe-winners Natural)
 (define tribe-winners 3)
 
-(: tribe-size Natural)
-(define tribe-size 40)
+(: tribe-size Positive-Integer)
+(define tribe-size 35) ; TODO!: update the other stuff so the breeding program is still sensible
 
 (: fitness (-> (Listof red:Warrior) (Listof citizen)))
 (define (fitness population)
@@ -67,11 +71,34 @@
                         (rec rest (append (map (mate parent) rest) children)))))))
     (rec warriors '())))
 
-;; so the whole flow will be (probably in some main.rkt file)
-;; make generation -> write files out -> get fitness ->
-;; save winners to disk -> create next generation
+(: new-world (-> World))
+(define (new-world)
+  (map (lambda (_) (gen:warriors tribe-size 100)) (range tribe-count)))
 
-(define-type Tribe (Listof Warrior))
-(: next-world (-> (Listof Tribe) (Listof Tribe)))
-(define (next-world t)
-  t)
+(: world-step (-> World World))
+(define (world-step tribes)
+  (let* ((tribes : (Listof (Listof citizen)) (map fitness tribes))
+         (best : (Listof citizen) (apply append (map (lambda ((citizens : (Listof citizen))) : (Listof citizen)
+                                                       (take citizens tribe-winners))
+                                                     tribes)))
+         (offspring : (Listof red:Warrior) (breed (map citizen-warrior best))))
+    (for ((c best))
+      (gen:save-warrior (citizen-warrior c)
+                        (string-append "warriors/" ; format string would probably be more clear...
+                                       (number->string (or (citizen-points c) 0))
+                                       "-"
+                                       (citizen-name c)
+                                       "-"
+                                       (number->string (random 1 100)))))
+    (letrec ((partition : (-> (Listof red:Warrior) World)
+                        (lambda (warriors)
+                          (if (empty? warriors)
+                              '()
+                              (cons (take warriors tribe-size) (partition (drop warriors tribe-size)))))))
+      (partition (random-sample offspring (* tribe-size tribe-count))))))
+
+(: evolution (-> Natural World))
+(define (evolution number-of-generations)
+  (if (zero? number-of-generations)
+      (new-world)
+      (world-step (evolution (sub1 number-of-generations)))))

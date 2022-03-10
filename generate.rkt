@@ -29,7 +29,8 @@
       (lambda ()
         ;; this should output more metadata eventually
         (displayln (string-append ";name " id))
-        (displayln (redcode:render-warrior warrior))))
+        (displayln (redcode:render-warrior warrior)))
+      #:exists 'replace)
     filename))
 
 (: warriors (-> Exact-Positive-Integer Exact-Positive-Integer (Listof redcode:Warrior)))
