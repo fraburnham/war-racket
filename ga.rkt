@@ -23,10 +23,12 @@
 (: tribe-size Positive-Integer)
 (define tribe-size 35) ; TODO!: update the other stuff so the breeding program is still sensible
 
-(: fitness (-> (Listof red:Warrior) (Listof citizen)))
-(define (fitness population)
+;; I think there is a logic failure in how fitness is being calculated...
+(: fitness (-> (Listof red:Warrior) (#:tribe-id-offset Integer) (Listof citizen)))
+(define (fitness population #:tribe-id-offset (offset 1))
   (let* ((population : (Listof citizen) (map (lambda ((c : red:Warrior) (i : Integer)) : citizen
-                                               (let ((i : String (number->string i)))
+                                               ;; this could be much better. I could be using new directories I think...
+                                               (let ((i : String (number->string (+ i (* 1000 offset)))))
                                                  (citizen c i (gen:save-warrior c i) #f)))
                                              population
                                              (range (length population)))))
@@ -80,10 +82,11 @@
 (: world-step (-> World World))
 (define (world-step tribes)
   (let* ((chan : (Async-Channelof (Listof citizen)) (make-async-channel tribe-count))
-         (threads (map (lambda ((tribe : (Listof red:Warrior)))
+         (threads (map (lambda ((tribe : (Listof red:Warrior)) (offset : Integer))
                          (thread (lambda ()
-                                   (async-channel-put chan (fitness tribe)))))
-                       tribes)))
+                                   (async-channel-put chan (fitness tribe #:tribe-id-offset offset)))))
+                       tribes
+                       (range tribe-count))))
     (for ((t threads))
       (thread-wait t))
     (let* ((tribes : (Listof (Listof citizen)) (map (lambda (x) (async-channel-get chan)) (range tribe-count)))
