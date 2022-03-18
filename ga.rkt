@@ -1,6 +1,7 @@
 #lang typed/racket
 
-(require typed/racket/random
+(require typed/racket/async-channel
+         typed/racket/random
          (prefix-in gen: "generate.rkt")
          (prefix-in red: "redcode.rkt")
          (prefix-in pmars: "pmars.rkt"))
@@ -13,7 +14,7 @@
                  (filename : String)
                  (points : pmars:Points)))
 
-(: tribe-count Natural)
+(: tribe-count Positive-Integer)
 (define tribe-count 10)
 
 (: tribe-winners Natural)
@@ -75,27 +76,35 @@
 (define (new-world)
   (map (lambda (_) (gen:warriors tribe-size 100)) (range tribe-count)))
 
+;; TODO: should also take the very worst performer for genetic diversity
 (: world-step (-> World World))
 (define (world-step tribes)
-  (let* ((tribes : (Listof (Listof citizen)) (map fitness tribes))
-         (best : (Listof citizen) (apply append (map (lambda ((citizens : (Listof citizen))) : (Listof citizen)
-                                                       (take citizens tribe-winners))
-                                                     tribes)))
-         (offspring : (Listof red:Warrior) (breed (map citizen-warrior best))))
-    (for ((c best))
-      (gen:save-warrior (citizen-warrior c)
-                        (string-append "warriors/" ; format string would probably be more clear...
-                                       (number->string (or (citizen-points c) 0))
-                                       "-"
-                                       (citizen-name c)
-                                       "-"
-                                       (number->string (random 1 100)))))
-    (letrec ((partition : (-> (Listof red:Warrior) World)
-                        (lambda (warriors)
-                          (if (empty? warriors)
-                              '()
-                              (cons (take warriors tribe-size) (partition (drop warriors tribe-size)))))))
-      (partition (random-sample offspring (* tribe-size tribe-count))))))
+  (let* ((chan : (Async-Channelof (Listof citizen)) (make-async-channel tribe-count))
+         (threads (map (lambda ((tribe : (Listof red:Warrior)))
+                         (thread (lambda ()
+                                   (async-channel-put chan (fitness tribe)))))
+                       tribes)))
+    (for ((t threads))
+      (thread-wait t))
+    (let* ((tribes : (Listof (Listof citizen)) (map (lambda (x) (async-channel-get chan)) (range tribe-count)))
+           (best : (Listof citizen) (apply append (map (lambda ((citizens : (Listof citizen))) : (Listof citizen)
+                                                         (take citizens tribe-winners))
+                                                       tribes)))
+           (offspring : (Listof red:Warrior) (breed (map citizen-warrior best))))
+      (for ((c best))
+        (gen:save-warrior (citizen-warrior c)
+                          (string-append "warriors/" ; format string would probably be more clear...
+                                         (number->string (or (citizen-points c) 0))
+                                         "-"
+                                         (citizen-name c)
+                                         "-"
+                                         (number->string (random 1 100)))))
+      (letrec ((partition : (-> (Listof red:Warrior) World)
+                          (lambda (warriors)
+                            (if (empty? warriors)
+                                '()
+                                (cons (take warriors tribe-size) (partition (drop warriors tribe-size)))))))
+        (partition (random-sample offspring (* tribe-size tribe-count)))))))
 
 (: evolution (-> Natural World))
 (define (evolution number-of-generations)
